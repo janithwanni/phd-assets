@@ -33,16 +33,25 @@ cl <- ifelse(x2 < sin_x1, "A", "B")
 # cl <- ifelse(round(abs(x2 - (sin(3*pi*x1)/2))) < 0.75, "A", "B")
 dx <- tibble(x1 = x1, x2 = x2, cl)
 
-p(dx)
+# p(dx)
 
 data <- rbind(
   dx |> filter(round(abs(x2 - sin_x1)) > 0.75),
   dx |> filter(round(abs(x2 - sin_x1)) <= 0.75) |> slice_sample(prop = 0.2)
 )
-p(dx)
+# p(dx)
 data <- rotate_data(data |> select(x1, x2), 45) |> mutate(cl = data$cl) |>
-  filter(x1 > -1, x1 < 1, x2 > -1, x2 < 1)
-p(data)
+  filter(x1 > -1, x1 < 1, x2 > -1, x2 < 1) |>
+  select(x = x1, y = x2, class = cl)
+# p(data)
 
-write_csv(dx |> select(x = x1, y = x2, class = cl), here::here("data/sawtooth_data.csv"))
+write_csv(data, here::here("data/sawtooth_data/pop_data.csv"))
 
+set.seed(345)
+
+training_indices <- sample(nrow(data), size = round(nrow(data) * 0.8))
+training_data <- data[training_indices, ]
+testing_data <- data[-training_indices, ]
+
+write_csv(training_data, here::here("data/sawtooth_data/train_data.csv"))
+write_csv(testing_data, here::here("data/sawtooth_data/test_data.csv"))
