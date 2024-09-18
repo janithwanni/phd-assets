@@ -16,9 +16,10 @@ rotate_data <- function(data, angle) {
   # Apply the rotation matrix to the dataset
   data <- as.matrix(data)
   center <- colMeans(data)
-  centered_data <- apply(data, 2, \(x) x - center)
+  
+  centered_data <- apply(data, 1, \(x) x - center) |> t()
   rotated_data <- centered_data %*% rotation_matrix
-  rotated_data <- apply(rotated_data, 2, \(x) x + center)
+  rotated_data <- apply(rotated_data, 1, \(x) x + center) |> t()
   rotated_data <- as_tibble(rotated_data, .name_repair = "unique")
   colnames(rotated_data) <- c("x1", "x2")
   # Return the rotated dataset
@@ -34,14 +35,14 @@ dx <- tibble(x1 = x1, x2 = x2, cl)
 
 p(dx)
 
-dx <- rbind(
+data <- rbind(
   dx |> filter(round(abs(x2 - sin_x1)) > 0.75),
-  dx |> filter(round(abs(x2 - sin_x1)) <= 0.75) |> slice_sample(prop = 0.1)
+  dx |> filter(round(abs(x2 - sin_x1)) <= 0.75) |> slice_sample(prop = 0.2)
 )
 p(dx)
-dx <- rotate_data(dx |> select(x1, x2), 45) |> mutate(cl = dx$cl) |>
+data <- rotate_data(data |> select(x1, x2), 45) |> mutate(cl = data$cl) |>
   filter(x1 > -1, x1 < 1, x2 > -1, x2 < 1)
-p(dx)
+p(data)
 
 write_csv(dx |> select(x = x1, y = x2, class = cl), here::here("data/sawtooth_data.csv"))
 
