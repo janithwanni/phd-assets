@@ -43,4 +43,5 @@ dx <- rotate_data(dx |> select(x1, x2), 45) |> mutate(cl = dx$cl) |>
   filter(x1 > -1, x1 < 1, x2 > -1, x2 < 1)
 p(dx)
 
+write_csv(dx |> select(x = x1, y = x2, class = cl), here::here("data/sawtooth_data.csv"))
 
