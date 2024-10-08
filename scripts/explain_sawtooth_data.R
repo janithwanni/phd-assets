@@ -147,13 +147,14 @@ generate_seq_obj <- function(input_data, model, predictor_obj) {
     nice_cf <- nice_cf_gen$find_counterfactuals(
       x_interest = local_inst,
       desired_class = target_class,
-      desired_prob = c(0.8, 1)
+      desired_prob = c(0.75, 1)
     )
     if(!is.null(nice_cf_gen$archive)){
       history <- nice_cf_gen$archive |> 
         imap(~ .x |> mutate(iter = .y)) |> 
         list_rbind()
     } else {
+      print(glue::glue("history is null in {i}"))
       history <- NULL
     }
     if(!is.null(nice_cf_gen$x_nn)) {
@@ -162,6 +163,7 @@ generate_seq_obj <- function(input_data, model, predictor_obj) {
         nice_cf$data |> mutate(dest = "cf")
       )
     } else {
+      print(glue::glue("x_nn is null in {i}"))
       cfs <- NULL
     }
     return(list(
