@@ -58,7 +58,7 @@ test_data_torch <- tensor_dataset(
 # Defining a data loader for batches
 batch_size <- 32
 train_dl <- dataloader(train_data_torch, batch_size = batch_size, shuffle = TRUE)
-d_hidden <- 4
+d_hidden <- 8
 d_out <- 1
 d_in <- 2
 
@@ -66,6 +66,8 @@ net <- nn_module(
   initialize = function(d_in, d_hidden, d_out) {
     self$net <- nn_sequential(
       nn_linear(d_in, d_hidden),
+      nn_relu(),
+      nn_linear(d_hidden, d_hidden),
       nn_relu(),
       nn_linear(d_hidden, d_out),
       nn_sigmoid()
@@ -78,7 +80,7 @@ net <- nn_module(
 
 fitted <- net |> setup(loss = nn_bce_loss(), optimizer = optim_adam) |>
   set_hparams(d_in = d_in, d_hidden = d_hidden, d_out = d_out) |>
-  fit(train_dl, epochs = 10)
+  fit(train_dl, epochs = 100)
 
 saveRDS(bundle::bundle(fitted), here::here("models/sawtooth_data/nnmodel.rds"))
 
@@ -96,3 +98,17 @@ train_data |>
   ) |>
   conf_mat(class, preds)
 
+predict_nn <- function(model, data, factor_levels = c("A", "B")) {
+  library(torch)
+  library(luz)
+  data_torch <- torch_tensor(as.matrix(data)) 
+  preds <- predict(model, newdata = data_torch)
+  factor(factor_levels[as.numeric(preds > 0.5) + 1])
+}
+
+train_data |> 
+  mutate(
+    class = factor(class),
+    preds = predict_nn(fitted, train_data |> select(x,y))
+  ) |>
+  conf_mat(class, preds)
